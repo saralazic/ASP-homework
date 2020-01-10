@@ -1,0 +1,230 @@
+#pragma once
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+using namespace std;
+
+template <typename T>
+struct input_t
+{
+	T& n;
+	explicit input_t(T& n) : n(n) { }
+	input_t(const input_t <T> & i) : n(i.n) { }
+};
+
+template <typename T>
+inline
+input_t <T>
+input(T& n)
+{
+	input_t <T> result(n);
+	return result;
+}
+
+
+
+template <typename T>
+istream& operator >> (istream& ins, const input_t <T> & i)
+{
+	// Read a line (terminated by ENTER|NEWLINE) from the user
+	string s;
+	getline(ins, s);
+
+	// Get rid of any trailing whitespace
+	s.erase(s.find_last_not_of(" \f\n\r\t\v") + 1);
+
+	// Read it into the target type
+	istringstream ss(s);
+	ss >> i.n;
+
+	// Check to see that there is nothing left over
+	if (!ss.eof())
+		ins.setstate(ios::failbit);
+
+	return ins;
+}
+
+
+
+template <typename T>
+void choise(T& t)
+{
+	cout << "Izaberite nacin unosa vaseg skupa\n"
+		<< "Za stvaranje praznog skupa unesite 0\n"
+		<< "Za citanje iz datoteke unesite 1\n"
+		<< "Za citanje sa standardnog ulaza unesite 2\n";
+
+	int n; long long p;
+	cin.clear();
+	cin >> input(n);
+	while (!cin)
+	{
+		cin.clear();
+		cout << "Uneli ste nepostojecu opciju, molimo pokusajte ponovo: \n";
+		cin >> input(n);
+	}
+
+	bool ind;
+	string s;
+	switch (n)
+	{
+	case 0: t.del(); break;
+	case 1: t.del();
+		cout << "Elementi vaseg skupa treba da se nalaze u datoteci ulaz1.txt<<\n";
+		ind = t.read1("ulaz1.txt");
+		if (!ind) return;
+		break;
+
+	case 2:
+		t.del();
+		ind = t.read2();
+		if (!ind) return;
+		break;
+
+	default: "Uneli ste nepostojecu opciju"; return;
+	}
+
+	cout << "\nVas skup je uspesno formiran!\n";
+
+	long i = 0;
+	while (true)
+	{
+		cout << "\nZa rad sa skupom izaberite neku od sledecih opcija:\n"
+			<< "0- unos novog skupa ili za kraj rada\n"
+			<< "1- unistavanje skupa (brisanje svih elemenata)\n"
+			<< "2- utvrdjivanje pripadnosti zadatog elementa\n"
+			<< "3-brisanje elementa\n"
+			<< "4-brisanje elemenata u zadatom opsegu\n"
+			<< "5-dohvatanje ukupnog broja elemenata\n"
+			<< "6-formiranje preseka sa drugim zadatim skupom\n"
+			<< "7-ispis skupa u datoteci\n"
+			<< "8-ispis skupa na standardnom izlazu\n";
+
+		if (i++) cin.clear();
+		cin >> input(p);
+		while (!cin)
+		{
+			cin.clear();
+			cout << "Uneli ste nepostojecu opciju, molimo pokusajte ponovo: \n";
+			cin >> input(p);
+		}
+
+		switch (p)
+		{
+		case 0:
+			return;
+		case 1:
+			t.del();
+			cout << "Skup je sada prazan\n";
+			break;
+
+		case 2:
+			cout << "Unesite element za koji zelite da proverite pripadnost: \n";
+			long long e;
+			cin.clear();
+			cin >> input(e);
+			while (!cin)
+			{
+				cin.clear();
+				cout << "Niste uneli celobrojnu vrednost, molimo pokusajte ponovo: \n";
+				cin >> input(e);
+			}
+			if (t.belong(e)) cout << "Element pripada skupu\n";
+			else cout << "Element ne pripada skupu\n";
+			break;
+
+		case 3:
+			cout << "Unesite koji umecete u skup: \n";
+			cin.clear();
+			cin >> input(e);
+			while (!cin)
+			{
+				cin.clear();
+				cout << "Niste uneli celobrojnu vrednost, molimo pokusajte ponovo: \n";
+				cin >> input(e);
+			}
+			if (t.belong(e)) cout << "\nZadati element vec postoji u skupu\n";
+			else
+			{
+				t.insert(e);
+				cout << "\nElement je uspesno dodat\n";
+			}
+			break;
+
+		case 4:
+			cout << "\nUnesite opseg u kom zelite da uklonite elemente\n";
+			long long a, b;
+
+			cin.clear();
+			cin >> input(a);
+			while (!cin)
+			{
+				cin.clear();
+				cout << "Niste uneli celobrojnu vrednost, molimo pokusajte ponovo: \n";
+				cin >> input(a);
+			}
+			cin.clear();
+			cin >> input(b);
+			while (!cin)
+			{
+				cin.clear();
+				cout << "Niste uneli celobrojnu vrednost, molimo pokusajte ponovo: \n";
+				cin >> input(b);
+			}
+
+			t.delseq(a, b);
+			cout << "Elementi u zadatom opsegu su sada uklonjeni iz skupa\n";
+			break;
+
+		case 5:
+			cout << "Broj elemenata skupa je:" << t.numofel() << endl;
+			break;
+
+		case 6:
+			cout << "Unesite 1 ukoliko zelite presek sa skupom formiranim iz datoteke, ili 2 ukoliko skup ucitavate sa standardnog ulaza: \n";
+			int m;
+			cin.clear();
+			cin >> input(m);
+			while (!cin)
+			{
+				cin.clear();
+				cout << "Uneli ste nepostojecu opciju, molimo pokusajte ponovo: \n";
+				cin >> input(m);
+			}
+
+
+			if (m == 1)
+			{
+				T b, c;
+				cout << "Skup je ocitan iz datoteke ulaz2.txt ";
+				string s;
+				ind = b.read1("ulaz2.txt");
+				if (!ind) break;
+				c.intersection(t, b);
+				c.write1("presek.txt");
+				cout << "Presek je formiran u datoteci presek.txt";
+			}
+			else if (m == 2)
+			{
+				T b, c;
+				b.read2();
+				c.intersection(t, b);
+				cout << c;
+			}
+
+			else cout << "Uneli ste nepostojecu opciju";
+			break;
+
+		case 7:
+			t.write1("izlaz.txt");
+			break;
+		case 8:
+			cout << t << endl;
+			break;
+		default:
+			cout << "Uneli ste nepostojecu opciju, molimo pokusajte ponovo\n";
+		}
+	}
+
+}

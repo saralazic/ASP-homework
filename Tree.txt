@@ -1,0 +1,382 @@
+#pragma once
+#include<fstream>
+#include"Set.h"
+#include<iostream>
+#include<string>
+using namespace std;
+
+class Tree :
+	public Set
+{
+protected:
+	struct Elem
+	{
+		long long key;
+		Elem *left, *right;
+		Elem(long long k = 0, Elem *l = nullptr, Elem *r = nullptr)
+		{
+			key = k; left = l; right = r;
+		}
+	};
+
+	struct head
+	{
+		long info;
+		Elem *tree;
+		head(long i = 0, Elem *t = nullptr)
+		{
+			info = i; tree = t;
+		}
+	}; //zaglavlje koje sadrzi broj cvorova i pokazivac na koren 
+
+
+	struct stack
+	{
+		Elem *node;
+		stack* next;
+
+		stack(Elem *x = nullptr, stack *n = nullptr)
+		{
+			node = x;
+			next = n;
+		}
+	};
+
+private:
+	head *header;
+	stack *s;
+
+public:
+	Tree()
+	{
+		header = new(head); //zaglavlje postavlja tako da je br cvorova 0, a pokazivac je nullptr
+		s = nullptr; //stek je prazan
+	}  //konstruktor
+
+
+	bool STACK_EMPTY()
+	{
+		return (s == nullptr);
+	}
+
+	void PUSH(Elem *e)
+	{
+		stack *n = new stack(e);
+		n->next = s;
+		s = n;
+	}   //stavljanje na stek
+
+
+
+	Elem* POP()
+	{
+		Elem *p; stack *d;
+		d = s;
+		s = s->next;
+		p = d->node;
+		delete(d);
+		return p;
+	}   //skidanje sa steka
+
+
+	void del()
+	{
+		Elem *n = header->tree, *p;
+		while (n != nullptr)
+		{
+			PUSH(n);
+			n = n->left;
+		}
+		while (!STACK_EMPTY())
+		{
+			n = POP();
+			if (n->key < 0)
+			{
+				p = n;
+				p->key = -p->key;
+				PUSH(p);
+				n = n->right;
+				while (n != nullptr)
+				{
+					PUSH(n);
+					n = n->left;
+				}
+			}
+			else
+			{
+				delete(n);
+			}
+		}
+		header->tree = nullptr;
+	}
+
+	~Tree()
+	{
+		del();
+		delete(header);
+		header = nullptr;
+	}
+	//DESTRUKTOR KOJI FUNKCIONISE PO POSTORDER PRICIPU
+	//BRISEMO LEVOG I DESNOG SINA, PA OCA
+
+	void insert(long long e)
+	{
+		Elem *n = new Elem(e); //kreiramo novi cvor
+		if (n == nullptr)
+		{
+			cout << "Nemoguce umetanje, nema memorije";
+			return;
+		}
+		Elem *p = header->tree; //p pokazuje na koren stabla
+		Elem *q = nullptr;
+		while (p != nullptr)
+		{
+			q = p;
+			if (n->key == p->key)
+				return;//ako su kljucevi jednaki ne ubacuje
+			else
+				if (n->key < p->key) p = p->left;
+				else p = p->right;
+		}
+		if (q == nullptr) header->tree = n;
+		else
+			if (n->key < q->key) q->left = n;
+			else q->right = n;
+			header->info++;
+	}
+	//umetanje u BST 
+
+	bool belong(long long e) const
+	{
+		Elem *p = header->tree;
+		while (p != nullptr && e != p->key)
+			if (e < p->key) p = p->left;
+			else p = p->right;
+			return (p != nullptr);
+	}
+	//provera da li cvor pripada BST
+
+
+	friend ofstream& operator<<(ofstream& of, Tree& T)
+	{
+		Elem *n;
+		n = T.header->tree;
+		while (1)
+		{
+			while (n != nullptr)
+			{
+				T.PUSH(n);
+				n = n->left;
+			}
+			if (!T.STACK_EMPTY())
+			{
+				n = T.POP();
+				of << n->key << " ";
+				n = n->right;
+			}
+			else break;
+		}
+		return of;
+	}//ispis u datoteku
+
+
+	friend ostream& operator<<(ostream& of, Tree& T)
+	{
+		Elem *n;
+		n = T.header->tree;
+		if (!n) of << "\nSkup je prazan";
+		else of << "\nElementi skupa su: ";
+		while (1)
+		{
+			while (n != nullptr)
+			{
+				T.PUSH(n);
+				n = n->left;
+			}
+			if (!T.STACK_EMPTY())
+			{
+				n = T.POP();
+				of << n->key << " ";
+				n = n->right;
+			}
+			else break;
+		}
+		return of;
+	}//ispis na standardni tok 
+
+
+
+	void delone(long long e)
+	{
+		Elem *p, *q, *rp, *lrp, *f;
+		//p-cvor koji se brise
+		//q-otac od p, ako p nije koren
+		//rp-cvor koji dolazi na mesto p
+		//lrp-cvor levo od rp
+		//f-cvor koji dolazi mesto rp
+		p = header->tree;
+		q = nullptr;
+		while (p != nullptr && (e != p->key))
+		{
+			q = p;
+			if (e < p->key) p = p->left;
+			else p = p->right;
+		}
+		if (p == nullptr)
+			return; //ako dati broj ne postoji, prekini
+		if (p->left == nullptr) rp = p->right;
+		else if (p->right == nullptr) rp = p->left;
+		else
+		{
+			f = p;
+			rp = p->right;
+			lrp = rp->left;
+			while (lrp != nullptr)
+			{
+				f = rp;
+				rp = lrp;
+				lrp = rp->left;
+			}
+			if (f != p)
+			{
+				f->left = rp->right;
+				rp->right = p->right;
+			}
+			rp->left = p->left;
+		}
+		if (q == nullptr) header->tree = rp;
+		else if (p == q->left) q->left = rp;
+		else q->right = rp;
+		delete(p);
+		header->info--;
+	} //brisanje zadatog cvora iz BST
+
+
+
+
+	void delseq(long long a, long long b)
+	{
+		for (long long i = a; i <= b; i++)
+			delone(i);
+	} //brisanje cvorova iz zadatog opsega
+
+
+
+	long long numofel() const
+	{
+		return header->info;
+	}//dohvatanje broja cvorova BST
+
+
+
+	void intersection(Tree& A, Tree& B)
+	{
+		del();
+		Elem *n;
+		if (A.header->info < B.header->info)
+		{
+			n = A.header->tree;
+			A.PUSH(n);
+			while (!A.STACK_EMPTY())
+			{
+				n = A.POP();
+				while (n)
+				{
+					if (B.belong(n->key)) insert(n->key);
+					if (n->right) A.PUSH(n->right);
+					n = n->left;
+				}
+			}
+
+		}
+		else
+		{
+			n = B.header->tree;
+			B.PUSH(n);
+			while (!B.STACK_EMPTY())
+			{
+				n = B.POP();
+				while (n)
+				{
+					if (A.belong(n->key)) insert(n->key);
+					if (n->right) B.PUSH(n->right);
+					n = n->left;
+				}
+			}
+
+		}
+	} //presek dva BST
+
+
+
+
+	bool read1(string s)
+	{
+		ifstream in;
+		in.open(s);
+
+		if (!in.is_open())
+		{
+			cout << "Datoteka nije otvorena\n\n";
+			return false;
+		}
+
+		long long z;
+		while (!in.eof())
+		{
+			in >> z;
+			insert(z);
+		}
+		in.close();
+		return true;
+	}//citanje BST iz datoteke  
+
+
+	void write1(string s)
+	{
+		ofstream out;
+		out.open(s);
+		if (!out.is_open())
+		{
+			cout << "Datoteka nije otvorena\n\n";
+			return;
+		}
+		out << *this;
+		out.close();
+	} //ispis u zadatu datoteku
+
+	bool read2()
+	{
+		long long z; long long n;
+		cout << "Unesite broj elemenata skupa: ";
+		cin >> input(n);
+
+		if (!cin)
+		{
+			cout << "Vas unos je nekorektan!\n";
+			return false;
+		}
+
+		if (n<0)
+		{
+			cout << "Vas unos je nekorektan!\n";
+			return false;
+		}
+
+		cout << "Unesite elemente skupa: ";
+		for (int i = 0; i < n; i++)
+		{
+			cin >> input(z);
+			if (!cin)
+			{
+				cout << "Vas unos je nekorektan!\n";
+				return false;
+			}
+			insert(z);
+		}
+		return true;
+	}
+};
+
+
+

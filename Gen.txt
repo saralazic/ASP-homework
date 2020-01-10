@@ -1,0 +1,150 @@
+#include "PerformanceCalculator.h"
+#include "Tree.h"
+#include "List.h"
+
+void performance()
+{
+	Tree T;
+	List L;
+	long size[5] = { 200,500,1000,10000,100000 };
+	long double mat1[5][5] = { 0 }, mat2[5][5] = { 0 };
+	long double time1,time2;
+	long long e;
+	string s[5] = { "formiranje","umetanje","brisanje","pretraga","presek	" };
+	PerformanceCalculator pc1,pc2;
+
+	for (int k = 0; k<3; k++)
+	{
+		for (int i = 0; i < 5; i++)
+		{
+			//vremena potrebna za formiranja skupa
+			time1 = 0; time2 = 0;
+			T.del(); L.del();
+			while (T.numofel() < size[i])
+			{
+				e = rand()*(RAND_MAX + 1) + rand();
+				pc1.start();
+				T.insert(e);
+				pc1.stop();
+				time1 += pc1.elapsedMillis();
+
+				pc2.start();
+				L.insert(e);
+				pc2.stop();
+				time2 += pc2.elapsedMillis();
+
+			}
+			cout << "Formiran skup od " << size[i] << " elemenata\n";
+			mat1[0][i] += time1;
+			mat2[0][i] += time2;
+
+			//vremena potrebna za umetanja elementa
+			e = rand()*(RAND_MAX + 1) + rand();
+			pc1.start();
+			T.insert(e);
+			pc1.stop();
+
+			pc2.start();
+			L.insert(e);
+			pc2.stop();
+
+			mat1[1][i] += pc1.elapsedMillis();
+			mat2[1][i] += pc2.elapsedMillis();
+
+
+			//vremena potrebna za brisanja elementa
+			e = rand()*(RAND_MAX + 1) + rand();
+			pc1.start();
+			T.delone(e);
+			pc1.stop();
+
+			pc2.start();
+			L.delone(e);
+			pc2.stop();
+
+			mat1[2][i] += pc1.elapsedMillis();
+			mat2[2][i] += pc2.elapsedMillis();
+
+			// vremena za pretrage elemenata
+			e = rand()*(RAND_MAX + 1) + rand();
+			pc1.start();
+			T.belong(e);
+			pc1.stop();
+
+			pc2.start();
+			L.belong(e);
+			pc2.stop();
+
+
+			mat1[3][i] += pc1.elapsedMillis();
+			mat2[3][i] += pc2.elapsedMillis();
+
+			//vremena potrebna za presek
+			Tree t2, t3; List l2, l3;
+
+			t2.del(); l2.del();
+			while (t2.numofel() < size[i])
+			{
+				e = rand()*(RAND_MAX + 1) + rand();
+				t2.insert(e);
+				l2.insert(e);
+			} //formiranje skupa sa kojim cemo praviti presek;
+
+			pc1.start();
+			t3.intersection(T, t2);
+			pc1.stop();
+			mat1[4][i] += pc1.elapsedMillis();
+
+			pc2.start();
+			l3.intersection(L, l2);
+			pc2.stop();
+			mat2[4][i] += pc2.elapsedMillis();
+
+		}
+			cout << "______________________________________________________________________" << endl;
+
+		}
+
+
+	cout << "Velicina skupa	|200		|500		|1000		|10000		|100000		|1000000\n";
+	cout << "__________________________________________________________________________________________________________\n";
+
+
+
+	cout << "Performanse skupa implementiranog kao stablo:\n\n";
+	
+	for (int i = 0; i < 5; i++)
+	{
+		cout << s[i] << "	|";
+		for (int j = 0; j < 5; j++)
+		{
+			mat1[i][j] /= 3;
+			if (mat1[i][j] == 0) cout << "0		|";
+			else if (mat1[i][j] > 100) cout << mat1[i][j] << "	|";
+				else  if (mat1[i][j]>10 )cout << mat1[i][j] << "		|";
+				else cout << mat1[i][j] << "	|";
+		}
+		cout << endl;
+	}
+
+
+	cout << "\n\n\nPerformanse skupa implementiranog kao lista:\n\n";
+	
+	cout << "Velicina skupa	|200		|500		|1000		|10000		|100000		|1000000\n";
+	cout << "__________________________________________________________________________________________________________\n";
+
+	for (int i = 0; i < 5; i++)
+	{
+		cout << s[i] << "	|";
+		for (int j = 0; j < 5; j++)
+		{
+			mat2[i][j] /= 3;
+			if (mat2[i][j] == 0) cout << "0		|";
+			else if (mat2[i][j] > 100) cout << mat2[i][j] << "	|";
+			else cout << mat2[i][j] << "	|";
+		}
+		cout << endl;
+	}
+
+
+};

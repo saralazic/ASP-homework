@@ -1,0 +1,1177 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include<string>
+#include "windows.h"
+
+using namespace std;
+
+
+class Set
+{
+public:
+	virtual bool belong(long long e) const = 0; //utvrdjivanje pripadnosti skupu
+	virtual void insert(long long e) = 0; //umetanje u skup
+	virtual void delone(long long e) = 0; //brisanje zadatog elementa
+	virtual void delseq(long long a, long long b) = 0; //brisanje u zadatom opsegu
+	virtual long long numofel() const = 0; //dohvatanje ukupnog broja elemenata
+	virtual bool read1(string s) = 0; // citanje iz datoteke
+	virtual bool read2() = 0;//citanje sa standardnog ulaza	
+	virtual void write1(string s) = 0; //upis u datoteku
+};
+
+
+
+
+template <typename T>
+struct input_t
+{
+	T& n;
+	explicit input_t(T& n) : n(n) { }
+	input_t(const input_t <T> & i) : n(i.n) { }
+};
+
+template <typename T>
+inline
+input_t <T>
+input(T& n)
+{
+	input_t <T> result(n);
+	return result;
+}
+
+
+
+template <typename T>
+istream& operator >> (istream& ins, const input_t <T> & i)
+{
+	// Read a line (terminated by ENTER|NEWLINE) from the user
+	string s;
+	getline(ins, s);
+
+	// Get rid of any trailing whitespace
+	s.erase(s.find_last_not_of(" \f\n\r\t\v") + 1);
+
+	// Read it into the target type
+	istringstream ss(s);
+	ss >> i.n;
+
+	// Check to see that there is nothing left over
+	if (!ss.eof())
+		ins.setstate(ios::failbit);
+
+	return ins;
+}
+
+
+template <typename T>
+void choise(T& t)
+{
+	cout << "Izaberite nacin unosa vaseg skupa\n"
+		<< "Za stvaranje praznog skupa unesite 0\n"
+		<< "Za citanje iz datoteke unesite 1\n"
+		<< "Za citanje sa standardnog ulaza unesite 2\n";
+
+	int n; long long p;
+	cin.clear();
+	cin >> input(n);
+	while (!cin)
+	{
+		cin.clear();
+		cout << "Uneli ste nepostojecu opciju, molimo pokusajte ponovo: \n";
+		cin >> input(n);
+	}
+
+	bool ind;
+	string s;
+	switch (n)
+	{
+	case 0: t.del(); break;
+	case 1: t.del();
+		cout << "Elementi vaseg skupa treba da se nalaze u datoteci ulaz1.txt<<\n";
+		ind = t.read1("ulaz1.txt");
+		if (!ind) return;
+		break;
+
+	case 2:
+		t.del();
+		ind = t.read2();
+		if (!ind) return;
+		break;
+
+	default: "Uneli ste nepostojecu opciju"; return;
+	}
+
+	cout << "\nVas skup je uspesno formiran!\n";
+
+	long i = 0;
+	while (true)
+	{
+		cout << "\nZa rad sa skupom izaberite neku od sledecih opcija:\n"
+			<< "0- unos novog skupa ili za kraj rada\n"
+			<< "1- unistavanje skupa (brisanje svih elemenata)\n"
+			<< "2- utvrdjivanje pripadnosti zadatog elementa\n"
+			<< "3-brisanje elementa\n"
+			<< "4-brisanje elemenata u zadatom opsegu\n"
+			<< "5-dohvatanje ukupnog broja elemenata\n"
+			<< "6-formiranje preseka sa drugim zadatim skupom\n"
+			<< "7-ispis skupa u datoteci\n"
+			<< "8-ispis skupa na standardnom izlazu\n";
+
+		if (i++) cin.clear();
+		cin >> input(p);
+		while (!cin)
+		{
+			cin.clear();
+			cout << "Uneli ste nepostojecu opciju, molimo pokusajte ponovo: \n";
+			cin >> input(p);
+		}
+
+		switch (p)
+		{
+		case 0:
+			return;
+		case 1:
+			t.del();
+			cout << "Skup je sada prazan\n";
+			break;
+
+		case 2:
+			cout << "Unesite element za koji zelite da proverite pripadnost: \n";
+			long long e;
+			cin.clear();
+			cin >> input(e);
+			while (!cin)
+			{
+				cin.clear();
+				cout << "Niste uneli celobrojnu vrednost, molimo pokusajte ponovo: \n";
+				cin >> input(e);
+			}
+			if (t.belong(e)) cout << "Element pripada skupu\n";
+			else cout << "Element ne pripada skupu\n";
+			break;
+
+		case 3:
+			cout << "Unesite koji umecete u skup: \n";
+			cin.clear();
+			cin >> input(e);
+			while (!cin)
+			{
+				cin.clear();
+				cout << "Niste uneli celobrojnu vrednost, molimo pokusajte ponovo: \n";
+				cin >> input(e);
+			}
+			if (t.belong(e)) cout << "\nZadati element vec postoji u skupu\n";
+			else
+			{
+				t.insert(e);
+				cout << "\nElement je uspesno dodat\n";
+			}
+			break;
+
+		case 4:
+			cout << "\nUnesite opseg u kom zelite da uklonite elemente\n";
+			long long a, b;
+
+			cin.clear();
+			cin >> input(a);
+			while (!cin)
+			{
+				cin.clear();
+				cout << "Niste uneli celobrojnu vrednost, molimo pokusajte ponovo: \n";
+				cin >> input(a);
+			}
+			cin.clear();
+			cin >> input(b);
+			while (!cin)
+			{
+				cin.clear();
+				cout << "Niste uneli celobrojnu vrednost, molimo pokusajte ponovo: \n";
+				cin >> input(b);
+			}
+
+			t.delseq(a, b);
+			cout << "Elementi u zadatom opsegu su sada uklonjeni iz skupa\n";
+			break;
+
+		case 5:
+			cout << "Broj elemenata skupa je:" << t.numofel() << endl;
+			break;
+
+		case 6:
+			cout << "Unesite 1 ukoliko zelite presek sa skupom formiranim iz datoteke, ili 2 ukoliko skup ucitavate sa standardnog ulaza: \n";
+			int m;
+			cin.clear();
+			cin >> input(m);
+			while (!cin)
+			{
+				cin.clear();
+				cout << "Uneli ste nepostojecu opciju, molimo pokusajte ponovo: \n";
+				cin >> input(m);
+			}
+
+
+			if (m == 1)
+			{
+				T b, c;
+				cout << "Skup je ocitan iz datoteke ulaz2.txt ";
+				string s;
+				ind = b.read1("ulaz2.txt");
+				if (!ind) break;
+				c.intersection(t, b);
+				c.write1("presek.txt");
+				cout << "Presek je formiran u datoteci presek.txt";
+			}
+			else if (m == 2)
+			{
+				T b, c;
+				b.read2();
+				c.intersection(t, b);
+				cout << c;
+			}
+
+			else cout << "Uneli ste nepostojecu opciju";
+			break;
+
+		case 7:
+			t.write1("izlaz.txt");
+			break;
+		case 8:
+			cout << t << endl;
+			break;
+		default:
+			cout << "Uneli ste nepostojecu opciju, molimo pokusajte ponovo\n";
+		}
+	}
+
+}
+
+
+//SKUP IMPLEMENTIRAN KAO DVOSTRUKO ULANCANA LISTA SA ZAGLAVLJEM
+//ZAGLAVLJE SADRZI: BROJ ELEMENATA SKUPA, POKAZIVAC NA PRVI I POSLEDNJI ELEMENT LISTE
+//LISTA JE SORTIRANA (ELEMENT SE UBACI NA ODGOVARAJUCE MESTO) I ELEMENTI SE NE PONAVLJAJU 
+
+class List :
+	public Set
+{
+protected:
+	struct Elem
+	{
+		long long info;
+		Elem *prev, *next;
+		Elem(long long b = 0, Elem *p = nullptr, Elem *n = nullptr)
+		{
+			info = b;
+			prev = p;
+			next = n;
+		}
+	};
+
+private:
+	Elem *header;
+
+
+	Elem* search(long long e)
+	{
+		if (header->info == 0) return nullptr;
+		if (e > header->prev->info || e < header->next->info) return nullptr;
+		Elem *current = header->next;
+		while (current && current->info < e) current = current->next;
+		return current;
+	} //funkcija koja vraca pokazivac na trazeni element skupa, ako postoji
+
+
+public:
+
+	void del()
+	{
+		Elem *old;
+		while (header)
+		{
+			header->prev = nullptr;
+			old = header;
+			header = header->next;
+			if (header) header->prev = nullptr;
+			delete(old);
+		}
+		header = new(Elem);
+	} //funkcija koja ocisti listu, ali ostavi zaglavlje
+
+
+	List()
+	{
+		header = new(Elem);
+		header->info = 0;
+		header->next = nullptr;
+		header->prev = nullptr;
+	} //konstruktor koji stvara praznu listu (postoji samo zaglavlje sa informacijom da u listi nema elemenata)
+
+	~List()
+	{
+		del();
+		delete(header);
+		header = nullptr;
+	} //destruktor
+
+
+
+	bool belong(long long e) const
+	{
+		if (header->info == 0) return false;
+		if ((e < header->next->info) || (e > header->prev->info)) return false;
+		Elem *current = header->next;
+		while (current && (e > current->info)) current = current->next;
+		if (current == nullptr) return false;
+		if (current->info>e) return false;
+		return true;
+	}//funkcija koja vraca true ukoliko zadati broj pripada skupu, false u suprotnom 
+
+
+
+	void insert(long long  e)
+	{
+
+		Elem *n = new Elem(e); //novi element 
+
+		if (header->info == 0)
+		{
+			header->next = n;
+			header->prev = n;
+			header->info++;
+			return;
+		}
+
+
+		if (e < header->next->info)
+		{
+			Elem *p = header->next;
+			n->next = p;
+			header->next = n;
+			p->prev = n;
+			header->info++;
+			return;
+		}
+		if (e > header->prev->info)
+		{
+			Elem *p = header->prev;
+			p->next = n;
+			n->prev = p;
+			header->info++;
+			header->prev = n;
+			return;
+		}
+
+		//slucaj kada ne umecemo ni na pocetak ni na kraj liste
+		Elem *current = header->next;
+		while (e > current->info) current = current->next;
+		if (e < current->info)
+		{
+			header->info++;
+			current = current->prev;
+			Elem *p;
+			p = current->next;
+			p->prev = n;
+			current->next = n;
+			n->prev = current;
+			n->next = p;
+		}
+	}
+
+
+
+	void delone(long long e)
+	{
+		Elem *current, *p, *n;
+		current = search(e);
+		if (current == nullptr) return;
+
+		header->info--;
+		if (current->prev == nullptr)
+		{
+			n = current->next;
+			if (n) n->prev = nullptr;
+			header->next = n;
+			delete(current);
+			return;
+		}
+
+		if (current->next == nullptr)
+		{
+			current->prev->next = nullptr;
+			header->prev = current->prev;
+			delete(current);
+			return;
+		}
+
+		p = current->prev;
+		n = current->next;
+		p->next = n;
+		n->prev = p;
+		delete(current);
+	}//brisanje zadatog elementa iz skupa
+
+
+	void delseq(long long a, long long b)
+	{
+		if (b < a)
+		{
+			cout << "Granice su pogresne";
+			exit(1);
+		}
+		Elem *current = header->next;
+		if (a > header->prev->info) return;
+		if (b < current->info) return;
+		while (current->info <a) current = current->next;
+		Elem *old;
+		while (current && current->info <= b)
+		{
+			old = current;
+			current = current->next;
+			delone(old->info);
+		}
+	}//brisanje u zadatom opsegu
+
+
+
+	long long numofel() const
+	{
+		return header->info;
+	}//dohvatanje broja elemenata
+
+
+	void intersection(const List& A, const List& B)
+	{
+		Elem *currentA = A.header->next;
+		Elem *currentB = B.header->next;
+		del();
+		header = new(Elem);
+		while (currentA && currentB)
+			if (currentA->info < currentB->info) currentA = currentA->next;
+			else
+				if (currentA->info > currentB->info) currentB = currentB->next;
+				else
+				{
+					insert(currentA->info);
+					currentB = currentB->next;
+					currentA = currentA->next;
+				}
+	}//presek
+
+
+
+	friend ostream& operator<<(ostream& it, const List& lst)
+	{
+		Elem *current = lst.header->next;
+		if (lst.header->info == 0)
+			cout << "Lista je prazna";
+		else
+			while (current)
+			{
+				it << current->info << " ";
+				current = current->next;
+			}
+
+		it << endl;
+		return it;
+	}//ispis
+
+
+
+
+	friend ofstream& operator<<(ofstream& it, const List& lst)
+	{
+		Elem *current = lst.header->next;
+		if (lst.header->info == 0)
+			it << "Skup je prazan/n";
+		else
+			it << "Elementi skupa su: ";
+		while (current)
+		{
+			it << current->info << " ";
+			current = current->next;
+		}
+
+		it << endl;
+		return it;
+	}//ispis
+
+
+
+	bool read1(string s)
+	{
+		ifstream in;
+		in.open(s);
+
+		if (!in.is_open())
+		{
+			cout << "Datoteka nije otvorena\n\n";
+			return false;
+		}
+
+		long long z;
+		while (!in.eof())
+		{
+			in >> z;
+			insert(z);
+		}
+		in.close();
+		return true;
+	}
+
+
+	void write1(string s)
+	{
+		ofstream out;
+		out.open(s);
+		if (!out.is_open())
+		{
+			cout << "Datoteka nije otvorena\n\n";
+			return;
+		}
+		out << *this;
+		out.close();
+	} //ispis u zadatu datoteku
+
+
+
+	bool read2()
+	{
+		long long z; long long n;
+		cout << "Unesite broj elemenata skupa: ";
+		cin >> input(n);
+
+		if (!cin)
+		{
+			cout << "Vas unos je nekorektan!\n";
+			return false;
+		}
+
+		if (n<0)
+		{
+			cout << "Vas unos je nekorektan!\n";
+			return false;
+		}
+
+		cout << "Unesite elemente skupa: ";
+		for (int i = 0; i < n; i++)
+		{
+			cin >> input(z);
+			if (!cin)
+			{
+				cout << "Vas unos je nekorektan!\n";
+				return false;
+			}
+			insert(z);
+		}
+		return true;
+	}
+};
+
+
+class Tree :
+	public Set
+{
+protected:
+	struct Elem
+	{
+		long long key;
+		Elem *left, *right;
+		Elem(long long k = 0, Elem *l = nullptr, Elem *r = nullptr)
+		{
+			key = k; left = l; right = r;
+		}
+	};
+
+	struct head
+	{
+		long info;
+		Elem *tree;
+		head(long i = 0, Elem *t = nullptr)
+		{
+			info = i; tree = t;
+		}
+	}; //zaglavlje koje sadrzi broj cvorova i pokazivac na koren 
+
+
+	struct stack
+	{
+		Elem *node;
+		stack* next;
+
+		stack(Elem *x = nullptr, stack *n = nullptr)
+		{
+			node = x;
+			next = n;
+		}
+	};
+
+private:
+	head *header;
+	stack *s;
+
+public:
+	Tree()
+	{
+		header = new(head); //zaglavlje postavlja tako da je br cvorova 0, a pokazivac je nullptr
+		s = nullptr; //stek je prazan
+	}  //konstruktor
+
+
+	bool STACK_EMPTY()
+	{
+		return (s == nullptr);
+	}
+
+	void PUSH(Elem *e)
+	{
+		stack *n = new stack(e);
+		n->next = s;
+		s = n;
+	}   //stavljanje na stek
+
+
+
+	Elem* POP()
+	{
+		Elem *p; stack *d;
+		d = s;
+		s = s->next;
+		p = d->node;
+		delete(d);
+		return p;
+	}   //skidanje sa steka
+
+
+	void del()
+	{
+		Elem *n = header->tree, *p;
+		while (n != nullptr)
+		{
+			PUSH(n);
+			n = n->left;
+		}
+		while (!STACK_EMPTY())
+		{
+			n = POP();
+			if (n->key < 0)
+			{
+				p = n;
+				p->key = -p->key;
+				PUSH(p);
+				n = n->right;
+				while (n != nullptr)
+				{
+					PUSH(n);
+					n = n->left;
+				}
+			}
+			else
+			{
+				delete(n);
+			}
+		}
+		header->tree = nullptr;
+	}
+
+	~Tree()
+	{
+		del();
+		delete(header);
+		header = nullptr;
+	}
+	//DESTRUKTOR KOJI FUNKCIONISE PO POSTORDER PRICIPU
+	//BRISEMO LEVOG I DESNOG SINA, PA OCA
+
+	void insert(long long e)
+	{
+		Elem *n = new Elem(e); //kreiramo novi cvor
+		if (n == nullptr)
+		{
+			cout << "Nemoguce umetanje, nema memorije";
+			return;
+		}
+		Elem *p = header->tree; //p pokazuje na koren stabla
+		Elem *q = nullptr;
+		while (p != nullptr)
+		{
+			q = p;
+			if (n->key == p->key)
+				return;//ako su kljucevi jednaki ne ubacuje
+			else
+				if (n->key < p->key) p = p->left;
+				else p = p->right;
+		}
+		if (q == nullptr) header->tree = n;
+		else
+			if (n->key < q->key) q->left = n;
+			else q->right = n;
+			header->info++;
+	}
+	//umetanje u BST 
+
+	bool belong(long long e) const
+	{
+		Elem *p = header->tree;
+		while (p != nullptr && e != p->key)
+			if (e < p->key) p = p->left;
+			else p = p->right;
+			return (p != nullptr);
+	}
+	//provera da li cvor pripada BST
+
+
+	friend ofstream& operator<<(ofstream& of, Tree& T)
+	{
+		Elem *n;
+		n = T.header->tree;
+		while (1)
+		{
+			while (n != nullptr)
+			{
+				T.PUSH(n);
+				n = n->left;
+			}
+			if (!T.STACK_EMPTY())
+			{
+				n = T.POP();
+				of << n->key << " ";
+				n = n->right;
+			}
+			else break;
+		}
+		return of;
+	}//ispis u datoteku
+
+
+	friend ostream& operator<<(ostream& of, Tree& T)
+	{
+		Elem *n;
+		n = T.header->tree;
+		if (!n) of << "\nSkup je prazan";
+		else of << "\nElementi skupa su: ";
+		while (1)
+		{
+			while (n != nullptr)
+			{
+				T.PUSH(n);
+				n = n->left;
+			}
+			if (!T.STACK_EMPTY())
+			{
+				n = T.POP();
+				of << n->key << " ";
+				n = n->right;
+			}
+			else break;
+		}
+		return of;
+	}//ispis na standardni tok 
+
+
+
+	void delone(long long e)
+	{
+		Elem *p, *q, *rp, *lrp, *f;
+		//p-cvor koji se brise
+		//q-otac od p, ako p nije koren
+		//rp-cvor koji dolazi na mesto p
+		//lrp-cvor levo od rp
+		//f-cvor koji dolazi mesto rp
+		p = header->tree;
+		q = nullptr;
+		while (p != nullptr && (e != p->key))
+		{
+			q = p;
+			if (e < p->key) p = p->left;
+			else p = p->right;
+		}
+		if (p == nullptr)
+			return; //ako dati broj ne postoji, prekini
+		if (p->left == nullptr) rp = p->right;
+		else if (p->right == nullptr) rp = p->left;
+		else
+		{
+			f = p;
+			rp = p->right;
+			lrp = rp->left;
+			while (lrp != nullptr)
+			{
+				f = rp;
+				rp = lrp;
+				lrp = rp->left;
+			}
+			if (f != p)
+			{
+				f->left = rp->right;
+				rp->right = p->right;
+			}
+			rp->left = p->left;
+		}
+		if (q == nullptr) header->tree = rp;
+		else if (p == q->left) q->left = rp;
+		else q->right = rp;
+		delete(p);
+		header->info--;
+	} //brisanje zadatog cvora iz BST
+
+
+
+
+	void delseq(long long a, long long b)
+	{
+		for (long long i = a; i <= b; i++)
+			delone(i);
+	} //brisanje cvorova iz zadatog opsega
+
+
+
+	long long numofel() const
+	{
+		return header->info;
+	}//dohvatanje broja cvorova BST
+
+
+
+	void intersection(Tree& A, Tree& B)
+	{
+		del();
+		Elem *n;
+		if (A.header->info < B.header->info)
+		{
+			n = A.header->tree;
+			A.PUSH(n);
+			while (!A.STACK_EMPTY())
+			{
+				n = A.POP();
+				while (n)
+				{
+					if (B.belong(n->key)) insert(n->key);
+					if (n->right) A.PUSH(n->right);
+					n = n->left;
+				}
+			}
+
+		}
+		else
+		{
+			n = B.header->tree;
+			B.PUSH(n);
+			while (!B.STACK_EMPTY())
+			{
+				n = B.POP();
+				while (n)
+				{
+					if (A.belong(n->key)) insert(n->key);
+					if (n->right) B.PUSH(n->right);
+					n = n->left;
+				}
+			}
+
+		}
+	} //presek dva BST
+
+
+
+
+	bool read1(string s)
+	{
+		ifstream in;
+		in.open(s);
+
+		if (!in.is_open())
+		{
+			cout << "Datoteka nije otvorena\n\n";
+			return false;
+		}
+
+		long long z;
+		while (!in.eof())
+		{
+			in >> z;
+			insert(z);
+		}
+		in.close();
+		return true;
+	}//citanje BST iz datoteke  
+
+
+	void write1(string s)
+	{
+		ofstream out;
+		out.open(s);
+		if (!out.is_open())
+		{
+			cout << "Datoteka nije otvorena\n\n";
+			return;
+		}
+		out << *this;
+		out.close();
+	} //ispis u zadatu datoteku
+
+	bool read2()
+	{
+		long long z; long long n;
+		cout << "Unesite broj elemenata skupa: ";
+		cin >> input(n);
+
+		if (!cin)
+		{
+			cout << "Vas unos je nekorektan!\n";
+			return false;
+		}
+
+		if (n<0)
+		{
+			cout << "Vas unos je nekorektan!\n";
+			return false;
+		}
+
+		cout << "Unesite elemente skupa: ";
+		for (int i = 0; i < n; i++)
+		{
+			cin >> input(z);
+			if (!cin)
+			{
+				cout << "Vas unos je nekorektan!\n";
+				return false;
+			}
+			insert(z);
+		}
+		return true;
+	}
+};
+
+
+
+class
+	PerformanceCalculator
+{
+	LARGE_INTEGER startCounter;
+	LARGE_INTEGER stopCounter;
+	LARGE_INTEGER frequency;
+public:
+	PerformanceCalculator()
+	{
+		startCounter.QuadPart = stopCounter.QuadPart = 0;
+		QueryPerformanceFrequency(&frequency);
+	}
+
+	void start()
+	{
+		QueryPerformanceCounter(&startCounter);
+	}
+
+	void stop()
+	{
+		QueryPerformanceCounter(&stopCounter);
+	}
+
+	double elapsedMillis()const
+	{
+		return(stopCounter.QuadPart - startCounter.QuadPart)*1000. / frequency.QuadPart;
+	}
+};
+
+
+
+void performance()
+{
+	Tree T;
+	List L;
+	long size[6] = { 200,500,1000,10000, 100000, 1000000};
+	long double mat1[5][6] = { 0 }, mat2[5][6] = { 0 };
+	long double time1, time2;
+	long long e;
+	string s[5] = { "formiranje","umetanje","brisanje","pretraga","presek	" };
+	PerformanceCalculator pc1, pc2;
+
+	for (int k = 0; k<3; k++)
+	{
+		for (int i = 0; i < 6; i++)
+		{
+			//vremena potrebna za formiranja skupa
+			time1 = 0; time2 = 0;
+			T.del(); L.del();
+			while (T.numofel() < size[i])
+			{
+				e = rand()*(RAND_MAX + 1) + rand();
+				pc1.start();
+				T.insert(e);
+				pc1.stop();
+				time1 += pc1.elapsedMillis();
+
+				pc2.start();
+				L.insert(e);
+				pc2.stop();
+				time2 += pc2.elapsedMillis();
+
+			}
+			cout << "Formiran skup od " << size[i] << " elemenata\n";
+			mat1[0][i] += time1;
+			mat2[0][i] += time2;
+
+			//vremena potrebna za umetanja elementa
+			e = rand()*(RAND_MAX + 1) + rand();
+			pc1.start();
+			T.insert(e);
+			pc1.stop();
+
+			pc2.start();
+			L.insert(e);
+			pc2.stop();
+
+			mat1[1][i] += pc1.elapsedMillis();
+			mat2[1][i] += pc2.elapsedMillis();
+
+
+			//vremena potrebna za brisanja elementa
+			e = rand()*(RAND_MAX + 1) + rand();
+			pc1.start();
+			T.delone(e);
+			pc1.stop();
+
+			pc2.start();
+			L.delone(e);
+			pc2.stop();
+
+			mat1[2][i] += pc1.elapsedMillis();
+			mat2[2][i] += pc2.elapsedMillis();
+
+			// vremena za pretrage elemenata
+			e = rand()*(RAND_MAX + 1) + rand();
+			pc1.start();
+			T.belong(e);
+			pc1.stop();
+
+			pc2.start();
+			L.belong(e);
+			pc2.stop();
+
+
+			mat1[3][i] += pc1.elapsedMillis();
+			mat2[3][i] += pc2.elapsedMillis();
+
+			//vremena potrebna za presek
+			Tree t2, t3; List l2, l3;
+
+			t2.del(); l2.del();
+			while (t2.numofel() < size[i])
+			{
+				e = rand()*(RAND_MAX + 1) + rand();
+				t2.insert(e);
+				l2.insert(e);
+			} //formiranje skupa sa kojim cemo praviti presek;
+
+			pc1.start();
+			t3.intersection(T, t2);
+			pc1.stop();
+			mat1[4][i] += pc1.elapsedMillis();
+
+			pc2.start();
+			l3.intersection(L, l2);
+			pc2.stop();
+			mat2[4][i] += pc2.elapsedMillis();
+
+		}
+		cout << "______________________________________________________________________" << endl;
+
+	}
+
+
+
+	cout << "Performanse skupa implementiranog kao stablo:\n\n";
+
+	cout << "Velicina skupa	|200		|500		|1000		|10000		|100000		|1000000\n";
+	cout << "__________________________________________________________________________________________________________\n";
+
+	for (int i = 0; i < 5; i++)
+	{
+		cout << s[i] << "	|";
+		for (int j = 0; j < 6; j++)
+		{
+			mat1[i][j] /= 3;
+			if (mat1[i][j] == 0) cout << "0		|";
+			else if (mat1[i][j] > 100) cout << mat1[i][j] << "	|";
+			else  if (mat1[i][j]>10)cout << mat1[i][j] << "		|";
+			else cout << mat1[i][j] << "	|";
+		}
+		cout << endl;
+	}
+
+
+	cout << "\n\n\nPerformanse skupa implementiranog kao lista:\n\n";
+
+	cout << "Velicina skupa	|200		|500		|1000		|10000		|100000		|1000000\n";
+	cout << "__________________________________________________________________________________________________________\n";
+
+	for (int i = 0; i < 5; i++)
+	{
+		cout << s[i] << "	|";
+		for (int j = 0; j < 6; j++)
+		{
+			mat2[i][j] /= 3;
+			if (mat2[i][j] == 0) cout << "0		|";
+			else if (mat2[i][j] > 100) cout << mat2[i][j] << "	|";
+			else cout << mat2[i][j] << "	|";
+		}
+		cout << endl;
+	}
+
+
+};
+
+
+
+int main()
+{
+	long long n;
+	cout << "Dobrodosli u program za rad sa skupovima!\n";
+	cout << "\nNapomena: ukoliko cete raditi sa datotekama, formirajte datoteke ulaz1.txt i ulaz2.txt\n"
+		<< "Iz datoteke ulaz1.txt ce se citati sadrzaj skupa sa kojim cete vrsiti operacije\n"
+		<< "Iz datoteke ulaz2.txt ce se eventualno citati sadrzaj skupa sa kojim cete vrsiti presek\n";
+
+	long i = 0;
+	while (true)
+	{
+		cout << "\nUkoliko zelite da radite sa skupom implementiranim u vidu dvostruko ulancane liste, izaberite opciju 1,\n"
+			<< "ukoliko zelite da radite sa skupom implementiranum u vidu binarnog stabla pretrazivanja, izaberite opciju 2,\n"
+			<< "ukoliko zelite prikaz performansi izvrsavanja, izaberite opciju 3,\n"
+			<< "za kraj rada unesite 0\n";
+
+		if (i++) cin.clear();
+		cin >> input(n);
+		while (!cin)
+		{
+			cin.clear();
+			cout << "Uneli ste nepostojecu opciju, molimo pokusajte ponovo: ";
+			cin >> input(n);
+		}
+
+		if (n == 0) break;
+
+
+		Tree T;
+		List L;
+
+
+		switch (n)
+		{
+		case 1:
+			choise(L);
+			break;
+		case 2:
+			choise(T);
+			break;
+		case 3:
+			performance();
+			break;
+		default: cout << "Uneli ste nepostojecu opciju, molimo pokusajte ponovo\n ";
+		}
+	}
+
+	cout << "\n\nHvala sto ste koristili program :)\n";
+
+
+	system("pause");
+
+}

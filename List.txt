@@ -1,0 +1,329 @@
+#pragma once
+#include"Choise.h"
+#include "Set.h"
+#include<iostream>
+#include<fstream>
+using namespace std;
+
+//SKUP IMPLEMENTIRAN KAO DVOSTRUKO ULANCANA LISTA SA ZAGLAVLJEM
+//ZAGLAVLJE SADRZI: BROJ ELEMENATA SKUPA, POKAZIVAC NA PRVI I POSLEDNJI ELEMENT LISTE
+//LISTA JE SORTIRANA (ELEMENT SE UBACI NA ODGOVARAJUCE MESTO) I ELEMENTI SE NE PONAVLJAJU 
+
+class List :
+	public Set
+{
+protected:
+	struct Elem
+	{
+		long long info;
+		Elem *prev, *next;
+		Elem(long long b = 0, Elem *p = nullptr, Elem *n = nullptr)
+		{
+			info = b;
+			prev = p;
+			next = n;
+		}
+	};
+
+private:
+	Elem *header;
+
+
+	Elem* search(long long e)
+	{
+		if (header->info == 0) return nullptr;
+		if (e > header->prev->info || e < header->next->info) return nullptr;
+		Elem *current = header->next;
+		while (current && current->info < e) current = current->next;
+		return current;
+	} //funkcija koja vraca pokazivac na trazeni element skupa, ako postoji
+
+
+public:
+
+	void del()
+	{
+		Elem *old;
+		while (header)
+		{
+			header->prev = nullptr;
+			old = header;
+			header = header->next;
+			if (header) header->prev = nullptr;
+			delete(old);
+		}
+		header = new(Elem);
+	} //funkcija koja ocisti listu, ali ostavi zaglavlje
+
+
+	List()
+	{
+		header = new(Elem);
+		header->info = 0;
+		header->next = nullptr;
+		header->prev = nullptr;
+	} //konstruktor koji stvara praznu listu (postoji samo zaglavlje sa informacijom da u listi nema elemenata)
+
+	~List()
+	{
+		del();
+		delete(header);
+		header = nullptr;
+	} //destruktor
+
+
+
+	bool belong(long long e) const
+	{
+		if (header->info == 0) return false;
+		if ((e < header->next->info) || (e > header->prev->info)) return false;
+		Elem *current = header->next;
+		while (current && (e > current->info)) current = current->next;
+		if (current == nullptr) return false;
+		if (current->info>e) return false;
+		return true;
+	}//funkcija koja vraca true ukoliko zadati broj pripada skupu, false u suprotnom 
+
+
+
+	void insert(long long  e)
+	{
+
+		Elem *n = new Elem(e); //novi element 
+
+		if (header->info == 0)
+		{
+			header->next = n;
+			header->prev = n;
+			header->info++;
+			return;
+		}
+
+
+		if (e < header->next->info)
+		{
+			Elem *p = header->next;
+			n->next = p;
+			header->next = n;
+			p->prev = n;
+			header->info++;
+			return;
+		}
+		if (e > header->prev->info)
+		{
+			Elem *p = header->prev;
+			p->next = n;
+			n->prev = p;
+			header->info++;
+			header->prev = n;
+			return;
+		}
+
+		//slucaj kada ne umecemo ni na pocetak ni na kraj liste
+		Elem *current = header->next;
+		while (e > current->info) current = current->next;
+		if (e < current->info)
+		{
+			header->info++;
+			current = current->prev;
+			Elem *p;
+			p = current->next;
+			p->prev = n;
+			current->next = n;
+			n->prev = current;
+			n->next = p;
+		}
+	}
+
+
+
+	void delone(long long e)
+	{
+		Elem *current, *p, *n;
+		current = search(e);
+		if (current == nullptr) return;
+
+		header->info--;
+		if (current->prev == nullptr)
+		{
+			n = current->next;
+			if (n) n->prev = nullptr;
+			header->next = n;
+			delete(current);
+			return;
+		}
+
+		if (current->next == nullptr)
+		{
+			current->prev->next = nullptr;
+			header->prev = current->prev;
+			delete(current);
+			return;
+		}
+
+		p = current->prev;
+		n = current->next;
+		p->next = n;
+		n->prev = p;
+		delete(current);
+	}//brisanje zadatog elementa iz skupa
+
+
+	void delseq(long long a, long long b)
+	{
+		if (b < a)
+		{
+			cout << "Granice su pogresne";
+			exit(1);
+		}
+		Elem *current = header->next;
+		if (a > header->prev->info) return;
+		if (b < current->info) return;
+		while (current->info <a) current = current->next;
+		Elem *old;
+		while (current && current->info <= b)
+		{
+			old = current;
+			current = current->next;
+			delone(old->info);
+		}
+	}//brisanje u zadatom opsegu
+
+
+
+	long long numofel() const
+	{
+		return header->info;
+	}//dohvatanje broja elemenata
+
+
+	void intersection(const List& A, const List& B)
+	{
+		Elem *currentA = A.header->next;
+		Elem *currentB = B.header->next;
+		del();
+		header = new(Elem);
+		while (currentA && currentB)
+			if (currentA->info < currentB->info) currentA = currentA->next;
+			else
+				if (currentA->info > currentB->info) currentB = currentB->next;
+				else
+				{
+					insert(currentA->info);
+					currentB = currentB->next;
+					currentA = currentA->next;
+				}
+	}//presek
+
+
+
+	friend ostream& operator<<(ostream& it, const List& lst)
+	{
+		Elem *current = lst.header->next;
+		if (lst.header->info == 0)
+			cout << "Lista je prazna";
+		else
+			while (current)
+			{
+				it << current->info << " ";
+				current = current->next;
+			}
+
+		it << endl;
+		return it;
+	}//ispis
+
+
+
+
+	friend ofstream& operator<<(ofstream& it, const List& lst)
+	{
+		Elem *current = lst.header->next;
+		if (lst.header->info == 0)
+			it << "Skup je prazan/n";
+		else
+			it << "Elementi skupa su: ";
+		while (current)
+		{
+			it << current->info << " ";
+			current = current->next;
+		}
+
+		it << endl;
+		return it;
+	}//ispis
+
+
+
+	bool read1(string s)
+	{
+		ifstream in;
+		in.open(s);
+
+		if (!in.is_open())
+		{
+			cout << "Datoteka nije otvorena\n\n";
+			return false;
+		}
+
+		long long z;
+		while (!in.eof())
+		{
+			in >> z;
+			insert(z);
+		}
+		in.close();
+		return true;
+	}
+
+
+	void write1(string s)
+	{
+		ofstream out;
+		out.open(s);
+		if (!out.is_open())
+		{
+			cout << "Datoteka nije otvorena\n\n";
+			return;
+		}
+		out << *this;
+		out.close();
+	} //ispis u zadatu datoteku
+
+
+
+
+
+	bool read2()
+	{
+		long long z; long long n;
+		cout << "Unesite broj elemenata skupa: ";
+		cin >> input(n);
+
+		if (!cin)
+		{
+			cout << "Vas unos je nekorektan!\n";
+			return false;
+		}
+
+		if (n<0)
+		{
+			cout << "Vas unos je nekorektan!\n";
+			return false;
+		}
+
+		cout << "Unesite elemente skupa: ";
+		for (int i = 0; i < n; i++)
+		{
+			cin >> input(z);
+			if (!cin)
+			{
+				cout << "Vas unos je nekorektan!\n";
+				return false;
+			}
+			insert(z);
+		}
+		return true;
+	}
+};
+
